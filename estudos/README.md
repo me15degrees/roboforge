@@ -9,10 +9,6 @@ Link para entender melhor como funciona o sensor: https://www.youtube.com/watch?
 
 Link para acessar o datasheet: https://www.makerhero.com/img/files/download/GL5528-Datasheet.pdf
 
-<div style="text-align: center;">
-    <img src="/home/me15degrees/Documents/Roboforge/roboforge/estudos/assets/graphic_ldr.png" alt="Descrição da imagem">
-</div>
-
 > Lógica de funcionamento: quanto maior a luminosidade, menor a resistência. Contudo vale lembrar que não são linearmente proporcionais.
 
 ¹ Componente passivo: não possuem "jeito correto" de ligar os terminais, pois são bidirecionais. Não tem risco de queimar, como seria em um capacitor.
