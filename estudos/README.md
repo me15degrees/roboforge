@@ -20,3 +20,10 @@ Link para acessar o datasheet: https://www.makerhero.com/img/files/download/GL55
 ## Código
 
 Utiliza Programação Orientada à Objetos para criar uma classe para o sensor LDR.
+
+O sensor GL5528 retorna para o microcontrolador uma variação de tensão que é convertida em um valor digital pelo ADC do microcontrolador. 
+Esse valor digital é então usado para determinar a intensidade da luz incidente sobre o sensor.
+
+A resolução (r) do ADC interefere, pois os valores podem assumir 2^r distintos.
+
+Considerar a tensão de referência como 5v.
