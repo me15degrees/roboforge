@@ -18,109 +18,124 @@ class Sumo:
         self.wheel_diameter = wheel_diameter
         self.wheel_lenght = wheel_diameter * 3.1415
         self.wheel_distance = wheel_distance
-        self.r_motor = Motor(Port.A) # esses motores provavelmente não vão mudar de lugar
+        self.r_motor = Motor(Port.A) 
         self.l_motor = Motor(Port.B)
-        self.r1_motor = Motor(Port.D) # esses motores provavelmente não vão mudar de lugar
-        self.l1_motor = Motor(Port.C)
-        self.ultra_sens1 = UltrasonicSensor(Port.S1) #sensor de cor na frente
-        self.ultra_sens2 = UltrasonicSensor(Port.S2) #sensor de cor na frente 
+        self.r1_motor = Motor(Port.D) # Motores que levam sinais de contrário na frente deles
+        self.l1_motor = Motor(Port.C) # Motores que levam sinais de contrário na frente deles
+        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal (qual lado?)
+        self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal (qual lado?)
      
-    def walk(self, speed=300):
+    def walk(self, speed=300): # Andar para frente, vale ressaltar que os motores de cada lado estão espelhados
         self.r_motor.run(speed)
         self.l_motor.run(speed)
         self.r1_motor.run(-speed)
         self.l1_motor.run(-speed)
 
-    def attack(self, speed=450): # ataque com mais velocidade
+    def attack(self, speed=450): # Ataque com mais velocidade
             self.r_motor.run(speed)
             self.l_motor.run(speed)
             self.r1_motor.run(-speed)
             self.l1_motor.run(-speed)
 
-    def hold_motors(self):
+    def hold_motors(self): # Stops the motor and actively holds it at its current angle (from official documentation)
         self.r_motor.hold()
         self.l_motor.hold()
         self.r1_motor.hold()
         self.l1_motor.hold()
 
-    def brake_motors(self):
+    def brake_motors(self): # The motor stops due to friction, plus the voltage that is generated while the motor is still moving (from official documentation)
         self.r_motor.brake()
         self.l_motor.brake()
         self.r1_motor.brake()
         self.l1_motor.brake()
 
-    def right(self, angle, speed):
-        print("\n----------------DIREITA----------------")
+    def reset_angle(self): # Função para resetar o ângulo dos 4 motores das rodas
         self.l_motor.reset_angle(0)
         self.r_motor.reset_angle(0)
         self.r1_motor.reset_angle(0)
         self.l1_motor.reset_angle(0)
-        media_motor = 0
-        graus_motor = angle * (self.wheel_distance / self.wheel_diameter)
-    
-        while media_motor < graus_motor:
-            self.l_motor.run(speed)
-            self.r_motor.run(-speed)
-            self.r1_motor.run(speed)
-            self.l1_motor.run(-speed)
-            print(media_motor)
-            media_motor = (self.l_motor.angle() - self.r_motor.angle()) / 2 # entender melhor o comportamento do media motor
-        self.r_motor.hold()
-        self.l_motor.hold()
-        self.r1_motor.hold()
-        self.l1_motor.hold()
 
-    def left(self, angle, speed=100):
+
+robo_sumo = Sumo(100,4.5,11.8)
+
+
+def right(angle, speed):
+        print("\n----------------DIREITA----------------")
+        robo_sumo.reset_angle()
+        
+        media_motor = 0
+        graus_motor = angle * (robo_sumo.wheel_distance / robo_sumo.wheel_diameter)
+        print(f"Graus motor: {graus_motor}\n")
+        while media_motor < graus_motor:
+            robo_sumo.l_motor.run(speed)
+            robo_sumo.r_motor.run(-speed)
+            robo_sumo.r1_motor.run(speed)
+            robo_sumo.l1_motor.run(-speed)
+            
+            media_motor = ((abs(robo_sumo.l_motor.angle()) + abs(robo_sumo.l1_motor.angle())) - (abs(robo_sumo.r_motor.angle()) + abs(robo_sumo.r1_motor.angle()))) / 2 
+            print(media_motor)
+        
+        robo_sumo.hold_motors()
+
+def left(angle, speed):
         print("\n----------------ESQUERDA----------------")
-        self.l_motor.reset_angle(0)
-        self.r_motor.reset_angle(0)
-        self.r1_motor.reset_angle(0)
-        self.l1_motor.reset_angle(0)
+        robo_sumo.reset_angle()
        
         media_motor = 0
-        graus_motor = angle * (self.wheel_distance / self.wheel_diameter) 
+        graus_motor = angle * (robo_sumo.wheel_distance / robo_sumo.wheel_diameter) 
+        print(f"Graus motor: {graus_motor}\n")
         
-        while media_motor < graus_motor: # para de girar até identificar que girou o ângulo ideal
-            self.l_motor.run(-speed)
-            self.r_motor.run(speed)
-            self.r1_motor.run(-speed)
-            self.l1_motor.run(speed)
+        while media_motor < graus_motor: # Para de girar até identificar que girou o ângulo ideal
+            robo_sumo.l_motor.run(-speed)
+            robo_sumo.r_motor.run(speed)
+            robo_sumo.r1_motor.run(-speed)
+            robo_sumo.l1_motor.run(speed)
+            
+            media_motor = ((abs(robo_sumo.l_motor.angle()) + abs(robo_sumo.l1_motor.angle())) - (abs(robo_sumo.r_motor.angle()) + abs(robo_sumo.r1_motor.angle()))) / 2 
             print(media_motor)
-            media_motor = -1*((self.l_motor.angle()) - self.r_motor.angle()) / 2 # entender melhor o comportamento do media motor
-        self.r_motor.hold()
-        self.l_motor.hold()
-        self.r1_motor.hold()
-        self.l1_motor.hold()
+        
+        robo_sumo.hold_motors()
 
-robo_sumo = Sumo(100,4.5,11.8) 
 
-def search(speed=200):
-    angle=120
-    #ponto inicial
-    robo_sumo.right(angle, speed)
+def search(speed):
+    robo_sumo.right(120, speed)
     robo_sumo.hold_motors()
-    robo_sumo.left(2*angle, speed)
+    robo_sumo.left(240, speed)
     robo_sumo.hold_motors()
-    robo_sumo.right(95, speed) # fazer ele retornar do ponto inicial
+    robo_sumo.right(90, speed) # Fazer ele retornar do ponto inicial
     sleep(0.5) 
+
+def detect_object(sensor, threshold = 100):
+    threshold = 100
+    return sensor.distance() < threshold # Retornar um Booleano
         
 def main():
-    ENEMY_DISTANCE = 100
     flag = 0
-    
-    while not flag:  # espera pelo botão central
+    while not flag:  # Espera pelo botão central.
         for button in ev3.buttons.pressed():
             print(button)
             if button == Button.CENTER:
                 flag = 1
 
-    distance = (robo_sumo.ultra_sens1.distance() + robo_sumo.ultra_sens2.distance()) / 2 # media dos dois sensores ultrassônicos
-    while distance >= ENEMY_DISTANCE:
-        search()
-        sleep(3)
-        distance = (robo_sumo.ultra_sens1.distance() + robo_sumo.ultra_sens2.distance()) / 2
-        robo_sumo.walk()
-        sleep(2)
-    robo_sumo.attack()
+    """ lógica simples: é feita a leitura dos sensores pelo robô
+        se ele identificar o oponente para a esquerda, ele vai virar para a esquerda 
+        TODO fazer o robô parar de virar enquanto estiver alinhado os dois sensores, apenas a função de virar não vai bastar
+        o mesmo acontece para a direita
+        se ele já cair alinhado ele vai com tudo
+        TODO talvez fazer uma função que vai aumentando a velocidade aos poucos
+        se não conseguir ver nada em nenhum dos sensores, ele faz a busca
+    """
+    while True:
+        left_sensor = detect_object(robo_sumo.ultra_sens1.distance())
+        right_sensor = detect_object(robo_sumo.ultra_sens2.distance())
+    
+        if left_sensor and not right_sensor:
+            robo_sumo.left()
+        elif right_sensor and not left_sensor:
+            robo_sumo.right()
+        elif right_sensor and left_sensor:
+            robo_sumo.attack() # colocar nas funções a tratativa de parar se ver a linha da borda
+        else:
+            search()
 
 main()
