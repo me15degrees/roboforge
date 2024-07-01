@@ -22,8 +22,10 @@ class Sumo:
         self.l_motor = Motor(Port.B)
         self.r1_motor = Motor(Port.D) # Motores que levam sinais de contrário na frente deles
         self.l1_motor = Motor(Port.C) # Motores que levam sinais de contrário na frente deles
-        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal (qual lado?)
-        self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal (qual lado?)
+        self.ultra_sens1 = UltrasonicSensor(Port.S1) # Sensor ultrassônico frontal direito
+        self.ultra_sens2 = UltrasonicSensor(Port.S2) # Sensor ultrassônico frontal esquerdo
+        self.color_sens1 = ColorSensor(Port.S3) # Sensor de cor traseiro
+        self.color_sens2 = ColorSensor(Port.S4) # Sensor de cor frontal
      
     def walk(self, speed=300): # Andar para frente, vale ressaltar que os motores de cada lado estão espelhados
         self.r_motor.run(speed)
@@ -36,6 +38,12 @@ class Sumo:
             self.l_motor.run(speed)
             self.r1_motor.run(-speed)
             self.l1_motor.run(-speed)
+    
+    def dc(self, dc): # Função para testar um novo tipo de ataque
+        self.r_motor.dc(dc)
+        self.l_motor.dc(dc)
+        self.r1_motor.dc(-dc)
+        self.l1_motor.dc(-dc)
 
     def hold_motors(self): # Stops the motor and actively holds it at its current angle (from official documentation)
         self.r_motor.hold()
@@ -56,86 +64,98 @@ class Sumo:
         self.l1_motor.reset_angle(0)
 
 
-robo_sumo = Sumo(100,4.5,11.8)
-
+brick00 = Sumo(100,4.5,11.8)
 
 def right(angle, speed):
-        print("\n----------------DIREITA----------------")
-        robo_sumo.reset_angle()
+        brick00.reset_angle()
         
         media_motor = 0
-        graus_motor = angle * (robo_sumo.wheel_distance / robo_sumo.wheel_diameter)
-        print(f"Graus motor: {graus_motor}\n")
+        graus_motor = angle * (brick00.wheel_distance / brick00.wheel_diameter)
         while media_motor < graus_motor:
-            robo_sumo.l_motor.run(speed)
-            robo_sumo.r_motor.run(-speed)
-            robo_sumo.r1_motor.run(speed)
-            robo_sumo.l1_motor.run(-speed)
+            brick00.l_motor.run(speed)
+            brick00.r_motor.run(-speed)
+            brick00.r1_motor.run(speed)
+            brick00.l1_motor.run(-speed)
             
-            media_motor = ((abs(robo_sumo.l_motor.angle()) + abs(robo_sumo.l1_motor.angle())) - (abs(robo_sumo.r_motor.angle()) + abs(robo_sumo.r1_motor.angle()))) / 2 
-            print(media_motor)
+            media_motor = ((abs(brick00.l_motor.angle()) + abs(brick00.l1_motor.angle())) - (abs(brick00.r_motor.angle()) + abs(brick00.r1_motor.angle()))) / 2 
         
-        robo_sumo.hold_motors()
+        brick00.hold_motors()
+
+def right_until(speed, HOLD=True):
+    brick00.reset_angle()
+
+    while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
+        brick00.l_motor.run(speed)
+        brick00.r_motor.run(-speed)
+        brick00.r1_motor.run(speed)
+        brick00.l1_motor.run(-speed)
+    if HOLD:
+        brick00.hold_motors()
 
 def left(angle, speed):
-        print("\n----------------ESQUERDA----------------")
-        robo_sumo.reset_angle()
+        brick00.reset_angle()
        
         media_motor = 0
-        graus_motor = angle * (robo_sumo.wheel_distance / robo_sumo.wheel_diameter) 
-        print(f"Graus motor: {graus_motor}\n")
-        
+        graus_motor = angle * (brick00.wheel_distance / brick00.wheel_diameter) 
         while media_motor < graus_motor: # Para de girar até identificar que girou o ângulo ideal
-            robo_sumo.l_motor.run(-speed)
-            robo_sumo.r_motor.run(speed)
-            robo_sumo.r1_motor.run(-speed)
-            robo_sumo.l1_motor.run(speed)
+            brick00.l_motor.run(-speed)
+            brick00.r_motor.run(speed)
+            brick00.r1_motor.run(-speed)
+            brick00.l1_motor.run(speed)
             
-            media_motor = ((abs(robo_sumo.l_motor.angle()) + abs(robo_sumo.l1_motor.angle())) - (abs(robo_sumo.r_motor.angle()) + abs(robo_sumo.r1_motor.angle()))) / 2 
-            print(media_motor)
+            media_motor = ((abs(brick00.l_motor.angle()) + abs(brick00.l1_motor.angle())) - (abs(brick00.r_motor.angle()) + abs(brick00.r1_motor.angle()))) / 2 
         
-        robo_sumo.hold_motors()
+        brick00.hold_motors()
+        
 
+def left_until(speed, HOLD=True):
+    brick00.reset_angle()
 
-def search(speed):
-    robo_sumo.right(120, speed)
-    robo_sumo.hold_motors()
-    robo_sumo.left(240, speed)
-    robo_sumo.hold_motors()
-    robo_sumo.right(90, speed) # Fazer ele retornar do ponto inicial
-    sleep(0.5) 
+    while not brick00.ultra_sens1.distance() and not brick00.ultra_sens2.distance():
+        brick00.l_motor.run(-speed)
+        brick00.r_motor.run(speed)
+        brick00.r1_motor.run(-speed)
+        brick00.l1_motor.run(speed)
+    if HOLD:
+        brick00.hold_motors()
 
-def detect_object(sensor, threshold = 100):
-    threshold = 100
+def search(speed, HOLD):
+    brick00.right_until(speed, HOLD)
+    sleep(0.3)
+    brick00.left_unitl(speed, HOLD)
+
+def detect_object(sensor, threshold = 100): # talvez transformar como método da classe
     return sensor.distance() < threshold # Retornar um Booleano
         
+def detect_color(sensor):
+    if sensor.Color.WHITE():
+        return True
+    return False
+
+
+""" Estratégia por enquanto: enquanto ele estiver vendo a cor preta ele continua procurando e atacando. Se identificar o branco ele vai "reto" p/ meio
+Na verdade precisamos melhorar a identificação dos casos do branco, pq assim tá muito podre
+"""
 def main():
+    THRESHOLD = 100
     flag = 0
-    while not flag:  # Espera pelo botão central.
+    
+    while not flag:  # Espera pelo botão central
         for button in ev3.buttons.pressed():
             print(button)
             if button == Button.CENTER:
                 flag = 1
-
-    """ lógica simples: é feita a leitura dos sensores pelo robô
-        se ele identificar o oponente para a esquerda, ele vai virar para a esquerda 
-        TODO fazer o robô parar de virar enquanto estiver alinhado os dois sensores, apenas a função de virar não vai bastar
-        o mesmo acontece para a direita
-        se ele já cair alinhado ele vai com tudo
-        TODO talvez fazer uma função que vai aumentando a velocidade aos poucos
-        se não conseguir ver nada em nenhum dos sensores, ele faz a busca
-    """
     while True:
-        left_sensor = detect_object(robo_sumo.ultra_sens1.distance())
-        right_sensor = detect_object(robo_sumo.ultra_sens2.distance())
+        while not detect_color(brick00.color_sens1) and not detect_color(brick00.color2): 
+            search(300, True) 
+            brick00.dc(90)
+        if detect_color(brick00.color_sens1):
+            brick00.walk(300)
+            sleep(3)
+        if detect_color(brick00.color_sens2):
+            brick00.walk(-300)
+            sleep(3)
     
-        if left_sensor and not right_sensor:
-            robo_sumo.left()
-        elif right_sensor and not left_sensor:
-            robo_sumo.right()
-        elif right_sensor and left_sensor:
-            robo_sumo.attack() # colocar nas funções a tratativa de parar se ver a linha da borda
-        else:
-            search()
+
 
 main()
